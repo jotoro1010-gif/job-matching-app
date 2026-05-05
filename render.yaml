@@ -19,7 +19,6 @@ services:
   - type: web
     name: job-matching-client
     env: static
-    region: singapore
     rootDir: client
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist

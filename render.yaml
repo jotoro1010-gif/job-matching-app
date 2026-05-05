@@ -3,6 +3,7 @@ services:
   - type: web
     name: job-matching-server
     env: node
+    plan: free
     region: singapore
     rootDir: server
     buildCommand: npm install

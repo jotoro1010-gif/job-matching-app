@@ -13,19 +13,35 @@ function emitNotification(req, userId) {
 }
 
 router.post('/', authenticate, (req, res) => {
-  const { targetId, liked } = req.body;
+  const { targetId, liked, type = 'normal' } = req.body;
 
-  db.swipes.create(req.userId, targetId, liked ? 1 : 0);
+  if (type === 'super' && liked) {
+    const count = db.swipes.getSuperLikeCount(req.userId);
+    if (count >= 3) return res.status(429).json({ error: '本日のスーパーライク上限（3回）に達しました' });
+  }
+
+  db.swipes.create(req.userId, targetId, liked ? 1 : 0, type);
 
   if (!liked) return res.json({ matched: false });
 
-  if (!db.swipes.hasMutualLike(req.userId, targetId)) return res.json({ matched: false });
+  // スーパーライク通知
+  if (type === 'super') {
+    db.notifications.create(targetId, 'super_like');
+    const io = req.app.get('io');
+    const targetSocketId = req.app.locals.userSockets?.get(targetId);
+    if (io && targetSocketId) {
+      const me = db.users.findById(req.userId);
+      io.to(targetSocketId).emit('super_like', { from: me });
+    }
+    emitNotification(req, targetId);
+  }
+
+  if (!db.swipes.hasMutualLike(req.userId, targetId)) return res.json({ matched: false, superLiked: type === 'super' });
 
   const [u1, u2] = [req.userId, targetId].sort((a, b) => a - b);
   const match = db.matches.findOrCreate(u1, u2);
   const partner = db.users.findById(targetId);
 
-  // マッチ通知を両ユーザーに作成・送信
   db.notifications.create(req.userId, 'match');
   db.notifications.create(targetId, 'match');
   emitNotification(req, req.userId);

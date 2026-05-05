@@ -9,9 +9,14 @@ router.get('/me', authenticate, (req, res) => {
 });
 
 router.put('/me', authenticate, (req, res) => {
-  const { name, bio, skills, location } = req.body;
-  db.users.update(req.userId, { name, bio, skills, location });
+  const { name, bio, skills, location, salary_range, work_style, company_size, relocation, faculty, department, university, preferred_industries, industry, job_values, company_appeals } = req.body;
+  db.users.update(req.userId, { name, bio, skills, location, salary_range, work_style, company_size, relocation, faculty, department, university, preferred_industries, industry, job_values, company_appeals });
   res.json({ ok: true });
+});
+
+router.get('/super-like-count', authenticate, (req, res) => {
+  const count = db.swipes.getSuperLikeCount(req.userId);
+  res.json({ count, remaining: Math.max(0, 3 - count) });
 });
 
 router.put('/avatar', authenticate, (req, res) => {

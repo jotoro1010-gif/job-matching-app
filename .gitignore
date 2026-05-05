@@ -9,6 +9,10 @@ server/.env
 
 # Database (contains user data - don't commit)
 server/db.json
+*.db
+
+# Claude Code settings
+.claude/
 
 # Build output
 client/dist/

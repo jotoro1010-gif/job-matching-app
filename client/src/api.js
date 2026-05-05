@@ -1,4 +1,4 @@
-const BASE = '/api';
+const BASE = (import.meta.env.VITE_API_URL || '') + '/api';
 
 function getToken() {
   return localStorage.getItem('token');
@@ -27,9 +27,13 @@ export const api = {
   updateMe: (data) => request('/users/me', { method: 'PUT', body: JSON.stringify(data) }),
   updateAvatar: (avatar) => request('/users/avatar', { method: 'PUT', body: JSON.stringify({ avatar }) }),
   getCandidates: () => request('/users/candidates'),
-  swipe: (targetId, liked) => request('/swipe', { method: 'POST', body: JSON.stringify({ targetId, liked }) }),
+  swipe: (targetId, liked, type = 'normal') => request('/swipe', { method: 'POST', body: JSON.stringify({ targetId, liked, type }) }),
   getMatches: () => request('/matches'),
   getMessages: (matchId) => request(`/matches/${matchId}/messages`),
   getUnreadCount: () => request('/notifications/unread-count'),
   markAllRead: () => request('/notifications/read-all', { method: 'POST' }),
+  getSuperLikeCount: () => request('/users/super-like-count'),
+  updateMatchStatus: (matchId, status) => request(`/matches/${matchId}/status`, { method: 'PUT', body: JSON.stringify({ status }) }),
+  proposeSchedule: (matchId, slots) => request(`/matches/${matchId}/schedules`, { method: 'POST', body: JSON.stringify({ slots }) }),
+  confirmSchedule: (matchId, messageId, slot) => request(`/matches/${matchId}/schedules/${messageId}/confirm`, { method: 'PUT', body: JSON.stringify({ slot }) }),
 };

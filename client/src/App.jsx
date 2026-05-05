@@ -18,32 +18,41 @@ function NavBar() {
   if (!user) return null;
   if (location.pathname.match(/^\/matches\/.+/)) return null;
 
-  const linkClass = (path) =>
-    `flex flex-col items-center text-xs ${location.pathname.startsWith(path) ? 'text-pink-500' : 'text-gray-400'}`;
+  const active = (path) => location.pathname.startsWith(path);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around py-2 z-50">
-      <Link to="/swipe" className={`flex flex-col items-center text-xs ${location.pathname === '/swipe' ? 'text-pink-500' : 'text-gray-400'}`}>
-        <span className="text-2xl">💼</span>
-        <span>探す</span>
-      </Link>
+    <nav className="fixed bottom-0 left-0 right-0 z-50">
+      <div className="max-w-md mx-auto bg-white border-t border-slate-100">
+        <div className="flex justify-around py-2">
+          <Link to="/swipe" className={`flex flex-col items-center gap-0.5 px-6 py-1 rounded-xl transition-colors ${active('/swipe') ? 'text-violet-600' : 'text-slate-400'}`}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+            <span className="text-[10px] font-medium">探す</span>
+          </Link>
 
-      <Link to="/matches" className={linkClass('/matches')}>
-        <div className="relative">
-          <span className="text-2xl">💬</span>
-          {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-0.5 leading-none">
-              {unreadCount > 9 ? '9+' : unreadCount}
-            </span>
-          )}
+          <Link to="/matches" className={`flex flex-col items-center gap-0.5 px-6 py-1 rounded-xl transition-colors relative ${active('/matches') ? 'text-violet-600' : 'text-slate-400'}`}>
+            <div className="relative">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+              {unreadCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[15px] h-[15px] flex items-center justify-center px-0.5 leading-none">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </div>
+            <span className="text-[10px] font-medium">マッチ</span>
+          </Link>
+
+          <Link to="/profile" className={`flex flex-col items-center gap-0.5 px-6 py-1 rounded-xl transition-colors ${active('/profile') ? 'text-violet-600' : 'text-slate-400'}`}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+            <span className="text-[10px] font-medium">マイページ</span>
+          </Link>
         </div>
-        <span>マッチ</span>
-      </Link>
-
-      <Link to="/profile" className={linkClass('/profile')}>
-        <span className="text-2xl">👤</span>
-        <span>プロフィール</span>
-      </Link>
+      </div>
     </nav>
   );
 }
@@ -80,7 +89,6 @@ export default function App() {
     setUser(newUser);
   };
 
-  // グローバル通知ソケット
   useEffect(() => {
     if (!user) {
       socketRef.current?.disconnect();
@@ -91,20 +99,18 @@ export default function App() {
 
     api.getUnreadCount().then(({ count }) => setUnreadCount(count)).catch(() => {});
 
-    const s = io('http://localhost:3001', { auth: { token: localStorage.getItem('token') } });
+    const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    const s = io(SOCKET_URL, { auth: { token: localStorage.getItem('token') } });
     socketRef.current = s;
     s.on('notification', ({ count }) => setUnreadCount(count));
 
-    return () => {
-      s.disconnect();
-      socketRef.current = null;
-    };
+    return () => { s.disconnect(); socketRef.current = null; };
   }, [user?.id]);
 
   return (
     <AuthContext.Provider value={{ user, login, logout, updateUser, unreadCount, setUnreadCount }}>
       <BrowserRouter>
-        <div className="max-w-md mx-auto min-h-screen pb-16">
+        <div className="max-w-md mx-auto min-h-screen pb-16 bg-slate-50">
           <NavBar />
           <Routes>
             <Route path="/login" element={user ? <Navigate to="/swipe" /> : <Login />} />

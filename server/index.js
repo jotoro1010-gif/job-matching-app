@@ -7,14 +7,16 @@ const db = require('./db');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: 'http://localhost:5173' } });
+
+const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
+const io = new Server(server, { cors: { origin: CLIENT_URL } });
 
 const SECRET = process.env.JWT_SECRET || 'shukatsu_secret_key';
 
 app.set('io', io);
 app.locals.userSockets = new Map(); // userId → socketId
 
-app.use(cors({ origin: 'http://localhost:5173' }));
+app.use(cors({ origin: CLIENT_URL }));
 app.use(express.json({ limit: '5mb' })); // base64画像を受け取るため上限を緩和
 
 app.use('/api/auth', require('./routes/auth'));
@@ -72,5 +74,5 @@ io.on('connection', (socket) => {
   });
 });
 
-const PORT = 3001;
-server.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+const PORT = process.env.PORT || 3001;
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));

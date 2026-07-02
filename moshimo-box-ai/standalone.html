@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>もしもボックスAI</title>
+<style>
+  :root {
+    --bg: #0f0a1e;
+    --card: #1c1433;
+    --accent: #ffb84d;
+    --accent2: #8b5cf6;
+    --white-05: rgba(255,255,255,0.05);
+    --white-10: rgba(255,255,255,0.1);
+    --white-15: rgba(255,255,255,0.15);
+    --white-20: rgba(255,255,255,0.2);
+    --white-40: rgba(255,255,255,0.4);
+    --white-50: rgba(255,255,255,0.5);
+    --white-70: rgba(255,255,255,0.7);
+    --white-80: rgba(255,255,255,0.8);
+    --white-90: rgba(255,255,255,0.9);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+  }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-thumb { background: var(--white-15); border-radius: 3px; }
+  button { font-family: inherit; cursor: pointer; border: none; }
+  input { font-family: inherit; }
+
+  /* ── タイトル画面 ── */
+  .title-screen {
+    height: 100vh; width: 100vw;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: var(--bg);
+  }
+  .box-icon {
+    font-size: 4.5rem; line-height: 1; background: none; padding: 0;
+    animation: glow 1.6s ease-in-out infinite;
+  }
+  .box-icon.opening { animation: box-open 0.85s ease-in forwards; }
+  .title-heading { margin-top: 2rem; font-size: 1.875rem; font-weight: 700; letter-spacing: 0.02em; }
+  .title-sub { margin-top: 0.5rem; color: var(--accent); }
+
+  @keyframes box-open {
+    0% { transform: scale(1) rotate(0deg); opacity: 1; }
+    50% { transform: scale(1.15) rotate(-6deg); opacity: 1; }
+    100% { transform: scale(0) rotate(20deg); opacity: 0; }
+  }
+  @keyframes glow {
+    0%, 100% { opacity: 0.5; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.05); }
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  /* ── ヘッダー ── */
+  .header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 1.5rem; border-bottom: 1px solid var(--white-10);
+  }
+  .header-title { font-size: 1.25rem; font-weight: 700; color: var(--accent); margin: 0; }
+  .nav { display: flex; gap: 0.5rem; }
+  .tab-btn {
+    padding: 0.375rem 0.75rem; border-radius: 999px; font-size: 0.875rem;
+    background: var(--white-10); color: #fff;
+  }
+  .tab-btn.active { background: var(--accent); color: var(--bg); font-weight: 700; }
+
+  /* ── レイアウト ── */
+  .main-content { padding: 1.5rem; max-width: 72rem; margin: 0 auto; }
+  .grid-2col { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+  @media (min-width: 768px) { .grid-2col { grid-template-columns: 1fr 1fr; } }
+  .right-col { position: relative; display: flex; flex-direction: column; gap: 1.5rem; }
+
+  .card { background: var(--card); border-radius: 1rem; padding: 1.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+  .card-title { font-size: 1.125rem; font-weight: 700; margin: 0 0 1rem; }
+
+  /* ── 設定 ── */
+  .settings { background: var(--card); border-radius: 0.75rem; margin-bottom: 1rem; padding: 0.5rem 1rem; font-size: 0.875rem; }
+  .settings summary { cursor: pointer; color: var(--accent); font-weight: 700; padding: 0.5rem 0; }
+  .settings-body { margin-top: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem; }
+  .hint { color: var(--white-50); font-size: 0.75rem; margin: 0; }
+
+  /* ── 入力フォーム ── */
+  .input-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+  .prefix-label { color: var(--accent); font-weight: 700; white-space: nowrap; }
+  .text-input {
+    flex: 1; background: var(--white-10); color: #fff; border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem; outline: none; border: 1px solid transparent; font-size: 0.95rem;
+  }
+  .text-input:focus { border-color: var(--accent); }
+  .examples { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+  .example-btn { font-size: 0.75rem; padding: 0.25rem 0.5rem; border-radius: 999px; background: var(--white-05); color: var(--white-70); }
+  .example-btn:hover { background: var(--white-15); }
+  .tone-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .tone-btn { padding: 0.375rem 0.75rem; border-radius: 999px; font-size: 0.875rem; font-weight: 500; background: var(--white-10); color: #fff; }
+  .tone-btn:hover { background: var(--white-20); }
+  .tone-btn.active { background: var(--accent); color: var(--bg); }
+  .primary-btn {
+    margin-top: 1.25rem; width: 100%; background: var(--accent2); color: #fff;
+    font-weight: 700; padding: 0.75rem; border-radius: 0.75rem; font-size: 1rem;
+  }
+  .primary-btn:hover:not(:disabled) { filter: brightness(1.1); }
+  .primary-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .error-text { margin-top: 0.75rem; color: #f87171; font-size: 0.875rem; }
+
+  /* ── 世界カード ── */
+  .world-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; }
+  .world-title { font-size: 1.5rem; font-weight: 700; color: var(--accent); margin: 0; }
+  .save-btn { font-size: 0.75rem; padding: 0.375rem 0.75rem; border-radius: 999px; white-space: nowrap; background: var(--accent); color: var(--bg); font-weight: 700; }
+  .save-btn:disabled { background: var(--white-10); color: var(--white-50); cursor: default; }
+  .world-visual { margin-top: 1rem; line-height: 1.7; color: var(--white-90); }
+  .world-summary { margin-top: 1rem; color: var(--white-70); font-size: 0.875rem; line-height: 1.6; }
+  .branch-title { font-size: 0.875rem; font-weight: 700; color: var(--accent2); margin: 1rem 0 0.5rem; }
+  .branch-list { list-style: disc; padding-left: 1.25rem; margin: 0; font-size: 0.875rem; color: var(--white-80); }
+  .branch-list li { margin-bottom: 0.25rem; }
+
+  /* ── チャット ── */
+  .chat-panel { display: flex; flex-direction: column; height: 420px; }
+  .chat-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+  .chat-header h3 { margin: 0; color: var(--accent2); font-weight: 700; font-size: 1rem; }
+  .clear-btn { background: none; font-size: 0.75rem; color: var(--white-50); }
+  .clear-btn:hover { color: var(--white-80); }
+  .chat-log { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.75rem; padding-right: 0.25rem; }
+  .chat-empty { color: var(--white-40); font-size: 0.875rem; margin: 0; }
+  .msg-row { display: flex; }
+  .msg-row.user { justify-content: flex-end; }
+  .msg-row.assistant { justify-content: flex-start; }
+  .msg-bubble { max-width: 80%; padding: 0.5rem 0.75rem; border-radius: 0.75rem; font-size: 0.875rem; white-space: pre-wrap; }
+  .msg-bubble.user { background: var(--accent2); color: #fff; }
+  .msg-bubble.assistant { background: var(--white-10); color: var(--white-90); }
+  .thinking { color: var(--white-40); font-size: 0.875rem; }
+  .chat-input-row { margin-top: 0.75rem; display: flex; gap: 0.5rem; }
+  .chat-send-btn { background: var(--accent2); color: #fff; padding: 0 1rem; border-radius: 0.5rem; font-size: 0.875rem; font-weight: 700; }
+  .chat-send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── ローディング ── */
+  .loading-overlay {
+    position: absolute; inset: 0; background: rgba(15,10,30,0.9);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 10; border-radius: 1rem;
+  }
+  .loading-glow { width: 6rem; height: 6rem; border-radius: 999px; background: var(--accent); filter: blur(20px); animation: glow 1.6s ease-in-out infinite; }
+  .loading-text { margin-top: 1.5rem; color: var(--white-80); animation: pulse 1.5s ease-in-out infinite; }
+
+  .placeholder-box {
+    background: var(--card); border-radius: 1rem; padding: 1.5rem; color: var(--white-50);
+    font-size: 0.875rem; min-height: 200px; display: flex; align-items: center; justify-content: center; text-align: center;
+  }
+
+  /* ── 図鑑 ── */
+  .gallery-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+  @media (min-width: 640px) { .gallery-grid { grid-template-columns: 1fr 1fr; } }
+  .gallery-card { background: var(--card); border-radius: 0.75rem; padding: 1rem; }
+  .gallery-card h3 { margin: 0; color: var(--accent); font-weight: 700; }
+  .gallery-premise { font-size: 0.75rem; color: var(--white-50); margin: 0.25rem 0 0; }
+  .gallery-summary {
+    font-size: 0.875rem; color: var(--white-70); margin: 0.5rem 0 0;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .gallery-actions { margin-top: 0.75rem; display: flex; gap: 0.5rem; }
+  .open-btn { font-size: 0.75rem; background: var(--accent2); color: #fff; padding: 0.25rem 0.75rem; border-radius: 999px; font-weight: 700; }
+  .delete-btn { font-size: 0.75rem; background: var(--white-10); color: #fff; padding: 0.25rem 0.75rem; border-radius: 999px; }
+  .empty-note { color: var(--white-50); font-size: 0.875rem; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+const STORAGE_WORLDS = 'moshimo_box_worlds';
+const STORAGE_KEY = 'moshimo_box_api_key';
+const STORAGE_MODEL = 'moshimo_box_model';
+
+const TONES = [
+  { id: 'sf', label: 'SF風', instruction: '硬派なSF考証のトーンで、テクノロジーや社会構造の変化を論理的に描写する。' },
+  { id: 'emotional', label: '感動系', instruction: '心に残る感動的なトーンで、登場人物の感情や人間ドラマを重視して描写する。' },
+  { id: 'comedy', label: 'コメディ', instruction: 'ユーモラスでコメディタッチなトーンで、突っ込みどころのある可笑しさを織り込んで描写する。' },
+  { id: 'historical', label: '歴史考証風', instruction: '歴史考証風の硬い文体で、時代背景や史実との整合性を意識して描写する。' },
+];
+
+const EXAMPLES = [
+  '人類が月に住んでいたら',
+  '猫が人間より知能が高かったら',
+  '江戸時代にインターネットがあったら',
+  '重力が半分だったら',
+];
+
+const state = {
+  entered: false,
+  tab: 'create',
+  premise: '',
+  tone: 'sf',
+  world: null,
+  loading: false,
+  error: '',
+  chatHistory: [],
+  chatLoading: false,
+  apiKey: localStorage.getItem(STORAGE_KEY) || '',
+  model: localStorage.getItem(STORAGE_MODEL) || 'claude-sonnet-4-6',
+  worlds: JSON.parse(localStorage.getItem(STORAGE_WORLDS) || '[]'),
+};
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = String(str ?? '');
+  return div.innerHTML;
+}
+
+function persistWorlds() {
+  localStorage.setItem(STORAGE_WORLDS, JSON.stringify(state.worlds));
+}
+
+async function callClaude(systemPrompt, messages) {
+  if (!state.apiKey.trim()) {
+    throw new Error('APIキーが設定されていません。上部の「APIキー設定」から入力してください。');
+  }
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': state.apiKey.trim(),
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({
+      model: state.model.trim() || 'claude-sonnet-4-6',
+      max_tokens: 1024,
+      system: systemPrompt,
+      messages,
+    }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error?.message || `APIエラー (${res.status})`);
+  }
+  return data.content?.[0]?.text ?? '';
+}
+
+async function generateWorld() {
+  if (!state.premise.trim() || state.loading) return;
+  state.loading = true;
+  state.error = '';
+  state.chatHistory = [];
+  state.world = null;
+  render();
+
+  const tone = TONES.find((t) => t.id === state.tone) || TONES[0];
+  const systemPrompt = `君はユーザーが入力した「もしも世界」の設計者。${tone.instruction}
+必ず以下のJSON形式のみで出力し、それ以外の文章や前後の説明は一切含めないこと。
+{
+  "title": "その世界を象徴する短いタイトル",
+  "visual": "具体的で没入感のある情景描写(150字程度)",
+  "summary": "世界観サマリー(200字程度)",
+  "branchPoints": ["現実との主な違い1", "違い2", "違い3"]
+}`;
+
+  try {
+    const text = await callClaude(systemPrompt, [
+      { role: 'user', content: `もしも${state.premise}だったら` },
+    ]);
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('AIの応答からJSONを抽出できませんでした');
+    const parsed = JSON.parse(jsonMatch[0]);
+    state.world = {
+      id: Date.now().toString(),
+      premise: state.premise,
+      tone: state.tone,
+      createdAt: new Date().toISOString(),
+      ...parsed,
+    };
+  } catch (e) {
+    state.error = e.message;
+  } finally {
+    state.loading = false;
+    render();
+  }
+}
+
+async function sendChat(text) {
+  if (!text.trim() || state.chatLoading || !state.world) return;
+  const world = state.world;
+  state.chatHistory = [...state.chatHistory, { role: 'user', content: text }];
+  state.chatLoading = true;
+  render();
+
+  const systemPrompt = `君はユーザーが入力した『もしも世界』の案内人。その世界に深く没入した描写と対話を提供する。
+
+【この世界の設定】
+もしも設定: もしも${world.premise}だったら
+タイトル: ${world.title}
+情景描写: ${world.visual}
+世界観サマリー: ${world.summary}
+現実との違い: ${(world.branchPoints || []).join(' / ')}
+
+上記の世界観を厳密に守り、案内人として一貫した口調で回答すること。設定に矛盾する質問には、世界観を保ったまま自然に答えること。`;
+
+  const messages = state.chatHistory.map((h) => ({ role: h.role, content: h.content }));
+
+  try {
+    const reply = await callClaude(systemPrompt, messages);
+    state.chatHistory = [...state.chatHistory, { role: 'assistant', content: reply }];
+  } catch (e) {
+    state.chatHistory = [...state.chatHistory, { role: 'assistant', content: `エラー: ${e.message}` }];
+  } finally {
+    state.chatLoading = false;
+    render();
+  }
+}
+
+function titleScreenHTML() {
+  return `
+    <div class="title-screen">
+      <button id="enterBtn" class="box-icon" aria-label="ボックスを開く">📦</button>
+      <h1 class="title-heading">もしもボックスAI</h1>
+      <p class="title-sub">タップしてボックスを開く</p>
+    </div>
+  `;
+}
+
+function settingsHTML() {
+  return `
+    <details class="settings">
+      <summary>APIキー設定</summary>
+      <div class="settings-body">
+        <p class="hint">Anthropic APIキーはこの端末のブラウザ内(localStorage)にのみ保存され、Claude API以外には送信されません。</p>
+        <input id="apiKeyInput" type="password" placeholder="sk-ant-..." value="${escapeHtml(state.apiKey)}" class="text-input" />
+        <input id="modelInput" type="text" placeholder="claude-sonnet-4-6" value="${escapeHtml(state.model)}" class="text-input" />
+        <p class="hint">モデル名がアカウントで使えない場合は変更してください。</p>
+      </div>
+    </details>
+  `;
+}
+
+function inputPanelHTML() {
+  return `
+    <div class="card">
+      <h2 class="card-title">もしも世界をつくる</h2>
+      <div class="input-row">
+        <span class="prefix-label">もしも</span>
+        <input id="premiseInput" value="${escapeHtml(state.premise)}" placeholder="人類が月に住んでいたら" class="text-input" />
+        <span class="prefix-label">だったら</span>
+      </div>
+      <div class="examples">
+        ${EXAMPLES.map((ex) => `<button class="js-example example-btn" data-value="${escapeHtml(ex)}">${escapeHtml(ex)}</button>`).join('')}
+      </div>
+      <div class="tone-row">
+        ${TONES.map((t) => `<button class="js-tone tone-btn ${state.tone === t.id ? 'active' : ''}" data-value="${t.id}">${t.label}</button>`).join('')}
+      </div>
+      <button id="generateBtn" class="primary-btn" ${state.loading || !state.premise.trim() ? 'disabled' : ''}>
+        ${state.loading ? '世界を生成中...' : 'この世界を開く'}
+      </button>
+    </div>
+    ${state.error ? `<p class="error-text">${escapeHtml(state.error)}</p>` : ''}
+  `;
+}
+
+function worldCardHTML(world) {
+  const saved = state.worlds.some((w) => w.id === world.id);
+  return `
+    <div class="card">
+      <div class="world-head">
+        <h2 class="world-title">${escapeHtml(world.title)}</h2>
+        <button id="saveBtn" class="save-btn" ${saved ? 'disabled' : ''}>${saved ? '図鑑に保存済み' : '図鑑に保存'}</button>
+      </div>
+      <p class="world-visual">${escapeHtml(world.visual)}</p>
+      <p class="world-summary">${escapeHtml(world.summary)}</p>
+      ${(world.branchPoints || []).length > 0 ? `
+        <h3 class="branch-title">現実との主な違い</h3>
+        <ul class="branch-list">${world.branchPoints.map((b) => `<li>${escapeHtml(b)}</li>`).join('')}</ul>
+      ` : ''}
+    </div>
+  `;
+}
+
+function chatPanelHTML(world) {
+  return `
+    <div class="card chat-panel">
+      <div class="chat-header">
+        <h3>案内人と話す</h3>
+        <button id="clearChatBtn" class="clear-btn">履歴クリア</button>
+      </div>
+      <div id="chatLog" class="chat-log">
+        ${state.chatHistory.length === 0 ? `<p class="chat-empty">「${escapeHtml(world.title)}」の案内人に、この世界について質問してみましょう。</p>` : ''}
+        ${state.chatHistory.map((m) => `
+          <div class="msg-row ${m.role}">
+            <div class="msg-bubble ${m.role}">${escapeHtml(m.content)}</div>
+          </div>
+        `).join('')}
+        ${state.chatLoading ? `<div class="thinking">案内人が考えています...</div>` : ''}
+      </div>
+      <div class="chat-input-row">
+        <input id="chatInput" placeholder="この世界の人はどう暮らしてる?" class="text-input" />
+        <button id="chatSendBtn" class="chat-send-btn" ${state.chatLoading ? 'disabled' : ''}>送信</button>
+      </div>
+    </div>
+  `;
+}
+
+function galleryHTML() {
+  if (state.worlds.length === 0) {
+    return `<p class="empty-note">まだ保存された世界はありません。「つくる」タブから世界を生成して保存してみましょう。</p>`;
+  }
+  return `
+    <div class="gallery-grid">
+      ${state.worlds.map((w) => `
+        <div class="gallery-card">
+          <h3>${escapeHtml(w.title)}</h3>
+          <p class="gallery-premise">もしも${escapeHtml(w.premise)}だったら</p>
+          <p class="gallery-summary">${escapeHtml(w.summary)}</p>
+          <div class="gallery-actions">
+            <button class="js-open-world open-btn" data-id="${w.id}">開く</button>
+            <button class="js-delete-world delete-btn" data-id="${w.id}">削除</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function mainHTML() {
+  return `
+    <div class="header">
+      <h1 class="header-title">📦 もしもボックスAI</h1>
+      <nav class="nav">
+        <button id="tabCreate" class="tab-btn ${state.tab === 'create' ? 'active' : ''}">つくる</button>
+        <button id="tabGallery" class="tab-btn ${state.tab === 'gallery' ? 'active' : ''}">図鑑（${state.worlds.length}）</button>
+      </nav>
+    </div>
+    <div class="main-content">
+      ${state.tab === 'gallery' ? galleryHTML() : `
+        <div class="grid-2col">
+          <div>
+            ${settingsHTML()}
+            ${inputPanelHTML()}
+          </div>
+          <div class="right-col">
+            ${state.loading ? `
+              <div class="loading-overlay">
+                <div class="loading-glow"></div>
+                <p class="loading-text">もしもの世界を紡いでいます...</p>
+              </div>
+            ` : ''}
+            ${state.world
+              ? `${worldCardHTML(state.world)}${chatPanelHTML(state.world)}`
+              : (!state.loading ? `<div class="placeholder-box">左側で「もしも」を入力して世界を開いてみましょう。</div>` : '')}
+          </div>
+        </div>
+      `}
+    </div>
+  `;
+}
+
+function bindTitleScreen() {
+  document.getElementById('enterBtn').addEventListener('click', (e) => {
+    e.currentTarget.classList.add('opening');
+    setTimeout(() => {
+      state.entered = true;
+      render();
+    }, 850);
+  });
+}
+
+function bindMain() {
+  document.getElementById('tabCreate').addEventListener('click', () => { state.tab = 'create'; render(); });
+  document.getElementById('tabGallery').addEventListener('click', () => { state.tab = 'gallery'; render(); });
+
+  if (state.tab === 'gallery') {
+    document.querySelectorAll('.js-open-world').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        state.world = state.worlds.find((x) => x.id === btn.dataset.id);
+        state.chatHistory = [];
+        state.tab = 'create';
+        render();
+      });
+    });
+    document.querySelectorAll('.js-delete-world').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        state.worlds = state.worlds.filter((x) => x.id !== btn.dataset.id);
+        persistWorlds();
+        render();
+      });
+    });
+    return;
+  }
+
+  document.getElementById('apiKeyInput').addEventListener('change', (e) => {
+    state.apiKey = e.target.value;
+    localStorage.setItem(STORAGE_KEY, state.apiKey);
+  });
+  document.getElementById('modelInput').addEventListener('change', (e) => {
+    state.model = e.target.value;
+    localStorage.setItem(STORAGE_MODEL, state.model);
+  });
+
+  const premiseInput = document.getElementById('premiseInput');
+  premiseInput.addEventListener('input', (e) => { state.premise = e.target.value; render(); });
+  premiseInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') generateWorld(); });
+  premiseInput.focus();
+  premiseInput.setSelectionRange(state.premise.length, state.premise.length);
+
+  document.querySelectorAll('.js-example').forEach((btn) => {
+    btn.addEventListener('click', () => { state.premise = btn.dataset.value; render(); });
+  });
+  document.querySelectorAll('.js-tone').forEach((btn) => {
+    btn.addEventListener('click', () => { state.tone = btn.dataset.value; render(); });
+  });
+  document.getElementById('generateBtn').addEventListener('click', generateWorld);
+
+  if (state.world) {
+    document.getElementById('saveBtn').addEventListener('click', () => {
+      if (!state.worlds.some((w) => w.id === state.world.id)) {
+        state.worlds = [state.world, ...state.worlds];
+        persistWorlds();
+        render();
+      }
+    });
+    document.getElementById('clearChatBtn').addEventListener('click', () => {
+      state.chatHistory = [];
+      render();
+    });
+    const chatInput = document.getElementById('chatInput');
+    const send = () => {
+      const text = chatInput.value.trim();
+      if (!text) return;
+      chatInput.value = '';
+      sendChat(text);
+    };
+    document.getElementById('chatSendBtn').addEventListener('click', send);
+    chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') send(); });
+    const chatLog = document.getElementById('chatLog');
+    chatLog.scrollTop = chatLog.scrollHeight;
+  }
+}
+
+function render() {
+  const root = document.getElementById('root');
+  if (!state.entered) {
+    root.innerHTML = titleScreenHTML();
+    bindTitleScreen();
+    return;
+  }
+  root.innerHTML = mainHTML();
+  bindMain();
+}
+
+render();
+</script>
+</body>
+</html>

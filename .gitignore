@@ -16,6 +16,7 @@ server/db.json
 
 # Build output
 client/dist/
+moshimo-box-ai/client/dist/
 
 # OS files
 .DS_Store

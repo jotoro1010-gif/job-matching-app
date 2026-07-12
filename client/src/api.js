@@ -37,7 +37,10 @@ export const api = {
   getUnreadCount: () => request('/notifications/unread-count'),
   markAllRead: () => request('/notifications/read-all', { method: 'POST' }),
   getSuperLikeCount: () => request('/users/super-like-count'),
-  updateMatchStatus: (matchId, status) => request(`/matches/${matchId}/status`, { method: 'PUT', body: JSON.stringify({ status }) }),
-  proposeSchedule: (matchId, slots) => request(`/matches/${matchId}/schedules`, { method: 'POST', body: JSON.stringify({ slots }) }),
-  confirmSchedule: (matchId, messageId, slot) => request(`/matches/${matchId}/schedules/${messageId}/confirm`, { method: 'PUT', body: JSON.stringify({ slot }) }),
+  updateMatchStatus: (matchId, status, interviewRound) => request(`/matches/${matchId}/status`, { method: 'PUT', body: JSON.stringify({ status, interviewRound }) }),
+  sendInvitation: (matchId, data) => request(`/matches/${matchId}/invitations`, { method: 'POST', body: JSON.stringify(data) }),
+  sendInterviewRequest: (matchId, data) => request(`/matches/${matchId}/interview-requests`, { method: 'POST', body: JSON.stringify(data) }),
+  confirmProposal: (matchId, messageId, slot) => request(`/matches/${matchId}/proposals/${messageId}/confirm`, { method: 'PUT', body: JSON.stringify({ slot }) }),
+  declineProposal: (matchId, messageId, reason) => request(`/matches/${matchId}/proposals/${messageId}/decline`, { method: 'PUT', body: JSON.stringify({ reason }) }),
+  counterProposal: (matchId, messageId, slots) => request(`/matches/${matchId}/proposals/${messageId}/counter`, { method: 'PUT', body: JSON.stringify({ slots }) }),
 };

@@ -54,6 +54,8 @@ io.on('connection', (socket) => {
 
   socket.on('send_message', ({ matchId, content }) => {
     if (!db.matches.isParticipant(matchId, socket.userId) || !content?.trim()) return;
+    const match = db.matches.findByUser(socket.userId).find(m => m.id === matchId);
+    if (match?.status === 'withdrawn') return;
 
     const { lastInsertRowid } = db.messages.create(matchId, socket.userId, content.trim());
     const msg = db.messages.findById(lastInsertRowid);
@@ -64,7 +66,6 @@ io.on('connection', (socket) => {
     socket.emit('new_message', payload);
 
     // 相手にメッセージ通知を送る
-    const match = db.matches.findByUser(socket.userId).find(m => m.id === matchId);
     if (match) {
       const recipientId = match.user1_id === socket.userId ? match.user2_id : match.user1_id;
       db.notifications.create(recipientId, 'message');

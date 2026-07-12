@@ -26,11 +26,11 @@ function ensureUser(fields) {
   return db.users.findById(lastInsertRowid);
 }
 
-function ensureMatchWithMessages(userAId, userBId, status, conversation) {
+function ensureMatchWithMessages(userAId, userBId, status, conversation, extra = {}) {
   const existing = db.matches.findByUser(userAId).find(m => m.user1_id === userBId || m.user2_id === userBId);
   if (existing) return existing;
   const match = db.matches.findOrCreate(userAId, userBId);
-  db.matches.updateStatus(match.id, status);
+  db.matches.updateStatus(match.id, status, extra);
   conversation.forEach(({ senderId, content }) => {
     db.messages.create(match.id, senderId, content);
   });
@@ -66,20 +66,20 @@ function ensureDemoData() {
       { from: 'partner', text: 'はじめまして！プロフィール拝見し、ぜひお話ししたく連絡しました。' },
       { from: 'demo', text: 'ご連絡ありがとうございます！興味があります、よろしくお願いします。' },
     ] },
-    { status: 'document_review', partner: partnerCompanies[1], conv: [
+    { status: 'active', partner: partnerCompanies[1], conv: [
       { from: 'demo', text: 'はじめまして、応募させていただきました。よろしくお願いいたします。' },
       { from: 'partner', text: 'ご応募ありがとうございます。まずは書類を確認させていただきますね。' },
     ] },
-    { status: 'interview_scheduling', partner: partnerCompanies[2], conv: [
+    { status: 'interview', extra: { interview_round: 1 }, partner: partnerCompanies[2], conv: [
       { from: 'partner', text: '書類選考通過のご連絡です。一度面接でお話しできればと思います。' },
       { from: 'demo', text: 'ありがとうございます！ぜひよろしくお願いします。' },
     ] },
   ];
 
-  studentConversations.forEach(({ status, partner, conv }) => {
+  studentConversations.forEach(({ status, extra, partner, conv }) => {
     ensureMatchWithMessages(demoStudent.id, partner.id, status, conv.map(m => ({
       senderId: m.from === 'demo' ? demoStudent.id : partner.id, content: m.text,
-    })));
+    })), extra);
   });
 
   const companyConversations = [
@@ -87,7 +87,7 @@ function ensureDemoData() {
       { from: 'demo', text: 'はじめまして！プロフィール拝見しました。ぜひ一度お話ししたいです。' },
       { from: 'partner', text: 'ご連絡ありがとうございます！お話しできるの楽しみにしています。' },
     ] },
-    { status: 'interview_scheduling', partner: partnerStudents[1], conv: [
+    { status: 'interview', extra: { interview_round: 1 }, partner: partnerStudents[1], conv: [
       { from: 'partner', text: 'はじめまして。御社のお仕事に興味があり応募しました。' },
       { from: 'demo', text: 'ご応募ありがとうございます！ぜひ一度面接でお話ししたいです。' },
     ] },
@@ -97,10 +97,10 @@ function ensureDemoData() {
     ] },
   ];
 
-  companyConversations.forEach(({ status, partner, conv }) => {
+  companyConversations.forEach(({ status, extra, partner, conv }) => {
     ensureMatchWithMessages(demoCompany.id, partner.id, status, conv.map(m => ({
       senderId: m.from === 'demo' ? demoCompany.id : partner.id, content: m.text,
-    })));
+    })), extra);
   });
 
   return { demoStudentId: demoStudent.id, demoCompanyId: demoCompany.id };

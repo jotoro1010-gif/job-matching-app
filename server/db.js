@@ -173,10 +173,10 @@ const db = {
       const match = load().matches.find(m => m.id === matchId);
       return !!(match && (match.user1_id === userId || match.user2_id === userId));
     },
-    updateStatus(matchId, status) {
+    updateStatus(matchId, status, extra = {}) {
       const data = load();
       const match = data.matches.find(m => m.id === matchId);
-      if (match) { match.status = status; save(data); }
+      if (match) { match.status = status; Object.assign(match, extra); save(data); }
     },
   },
 
@@ -189,15 +189,39 @@ const db = {
       save(data);
       return { lastInsertRowid: id };
     },
-    createSchedule(matchId, senderId, slots) {
-      return this.create(matchId, senderId, '日程候補を提案しました', 'schedule', {
-        slots, confirmed_slot: null, schedule_status: 'pending',
+    createInvitation(matchId, senderId, title, details, slots) {
+      return this.create(matchId, senderId, title, 'invitation', {
+        title, details: details || '', slots, proposedBy: senderId,
+        status: 'pending', confirmedSlot: null, declineReason: null,
       });
     },
-    confirmSchedule(messageId, slot) {
+    createInterviewRequest(matchId, senderId, requestType, comment, slots) {
+      return this.create(matchId, senderId, '面談を希望します', 'interview_request', {
+        requestType, comment: comment || '', slots, proposedBy: senderId,
+        status: 'pending', confirmedSlot: null,
+      });
+    },
+    confirmProposal(messageId, slot) {
       const data = load();
       const msg = data.messages.find(m => m.id === messageId);
-      if (msg && msg.type === 'schedule') { msg.confirmed_slot = slot; msg.schedule_status = 'confirmed'; save(data); }
+      if (msg && (msg.type === 'invitation' || msg.type === 'interview_request')) {
+        msg.confirmedSlot = slot; msg.status = 'confirmed'; save(data);
+      }
+      return msg;
+    },
+    declineProposal(messageId, reason) {
+      const data = load();
+      const msg = data.messages.find(m => m.id === messageId);
+      if (msg && msg.type === 'invitation') { msg.status = 'declined'; msg.declineReason = reason; save(data); }
+      return msg;
+    },
+    counterProposal(messageId, senderId, slots) {
+      const data = load();
+      const msg = data.messages.find(m => m.id === messageId);
+      if (msg && (msg.type === 'invitation' || msg.type === 'interview_request')) {
+        msg.slots = slots; msg.proposedBy = senderId; msg.status = 'pending'; msg.confirmedSlot = null; save(data);
+      }
+      return msg;
     },
     findById(id) {
       return load().messages.find(m => m.id === id);

@@ -4,6 +4,7 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const db = require('./db');
+const { ensureDemoData } = require('./seedDemo');
 
 const app = express();
 const server = http.createServer(app);
@@ -73,6 +74,8 @@ io.on('connection', (socket) => {
     }
   });
 });
+
+ensureDemoData();
 
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));

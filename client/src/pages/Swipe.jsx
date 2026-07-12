@@ -46,6 +46,7 @@ function SwipeCard({ candidate, onSwipe, onOpenDetail }) {
     setOffset(diff);
   };
   const handleEnd = () => {
+    if (startX.current === null) return; // ドラッグ/タップが開始されていない（カーソルが通り過ぎただけ）
     setDragging(false);
     if (!didDrag.current) {
       // タップ判定 → 詳細へ
@@ -287,7 +288,7 @@ function CandidateDetail({ candidate, onSwipe, onBack, superLikeRemaining }) {
       </div>
 
       {/* アクションフッター（固定） */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 px-4 pt-3 pb-6">
+      <div className="fixed bottom-16 left-0 right-0 bg-white border-t border-slate-100 px-4 pt-3 pb-3 max-w-md mx-auto">
         {swiped ? (
           <div className={`h-14 flex items-center justify-center rounded-2xl font-bold text-sm ${
             swiped === 'nope' ? 'bg-slate-100 text-slate-500' :
@@ -337,6 +338,13 @@ export default function Swipe() {
   const [matchPopup, setMatchPopup] = useState(null);
   const [superLikeRemaining, setSuperLikeRemaining] = useState(3);
   const [selected, setSelected] = useState(null);
+  const [errorToast, setErrorToast] = useState('');
+
+  useEffect(() => {
+    if (!errorToast) return;
+    const timer = setTimeout(() => setErrorToast(''), 3000);
+    return () => clearTimeout(timer);
+  }, [errorToast]);
 
   const fetchCandidates = async () => {
     setLoading(true);
@@ -349,6 +357,14 @@ export default function Swipe() {
 
   useEffect(() => { fetchCandidates(); }, []);
 
+  const handleRestart = async () => {
+    setLoading(true);
+    try {
+      await api.resetSwipes();
+      await fetchCandidates();
+    } catch (e) { console.error(e); setLoading(false); }
+  };
+
   const handleSwipe = async (liked, type = 'normal') => {
     const candidate = selected || candidates[candidates.length - 1];
     if (!candidate) return;
@@ -358,7 +374,7 @@ export default function Swipe() {
       const res = await api.swipe(candidateId, liked, type);
       if (res.matched) setMatchPopup(res.partner);
     } catch (e) {
-      if (e.message && e.message.includes('上限')) { alert(e.message); setSuperLikeRemaining(0); }
+      if (e.message && e.message.includes('上限')) { setErrorToast(e.message); setSuperLikeRemaining(0); }
       console.error(e);
     }
     setCandidates(prev => prev.filter(c => c.id !== candidateId));
@@ -413,7 +429,7 @@ export default function Swipe() {
           <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-3xl mb-4">✓</div>
           <p className="font-semibold text-slate-600">候補を見尽くしました</p>
           <p className="text-sm mt-1">しばらく後にまた確認してください</p>
-          <button onClick={fetchCandidates} className="mt-6 bg-violet-600 text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-violet-700 transition-colors">
+          <button onClick={handleRestart} className="mt-6 bg-violet-600 text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-violet-700 transition-colors">
             更新する
           </button>
         </div>
@@ -484,6 +500,12 @@ export default function Swipe() {
               メッセージを送る
             </button>
           </div>
+        </div>
+      )}
+
+      {errorToast && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-sm px-5 py-3 rounded-xl shadow-lg z-50 max-w-[90%] text-center">
+          {errorToast}
         </div>
       )}
     </div>

@@ -19,7 +19,8 @@ export default function Register() {
     setError('');
     setLoading(true);
     try {
-      const { token, user } = await api.register(form);
+      const guestEmail = `guest_${Date.now()}_${Math.random().toString(36).slice(2, 8)}@shukatsu-match.local`;
+      const { token, user } = await api.register({ ...form, email: guestEmail, password: 'guest-prototype' });
       login(user, token);
     } catch (err) {
       setError(err.message);
@@ -97,14 +98,6 @@ export default function Register() {
                 {form.role === 'student' ? 'お名前' : '企業名'}
               </label>
               <input type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className={inputClass} placeholder={form.role === 'student' ? '山田 太郎' : '株式会社〇〇'} required />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">メールアドレス</label>
-              <input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className={inputClass} placeholder="mail@example.com" required />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">パスワード</label>
-              <input type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} className={inputClass} placeholder="6文字以上" minLength={6} required />
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">
@@ -189,8 +182,8 @@ export default function Register() {
       )}
 
       <p className="text-center mt-6 text-slate-500 text-sm">
-        すでにアカウントをお持ちの方は{' '}
-        <Link to="/login" className="text-violet-600 font-semibold hover:underline">ログイン</Link>
+        既存のアカウントを使う方は{' '}
+        <Link to="/login" className="text-violet-600 font-semibold hover:underline">アカウントを選ぶ</Link>
       </p>
     </div>
   );

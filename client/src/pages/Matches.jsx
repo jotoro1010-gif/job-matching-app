@@ -23,12 +23,17 @@ export default function Matches() {
   const { setUnreadCount } = useAuth();
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [openStatusId, setOpenStatusId] = useState(null);
 
-  useEffect(() => {
-    api.getMatches().then(setMatches).catch(console.error).finally(() => setLoading(false));
+  const fetchMatches = () => {
+    setLoading(true);
+    setError('');
+    api.getMatches().then(setMatches).catch(e => setError(e.message || '読み込みに失敗しました')).finally(() => setLoading(false));
     api.markAllRead().then(() => setUnreadCount(0)).catch(() => {});
-  }, []);
+  };
+
+  useEffect(() => { fetchMatches(); }, []);
 
   const handleStatusChange = async (matchId, status) => {
     try {
@@ -50,7 +55,13 @@ export default function Matches() {
     <div className="px-4 pt-6">
       <h1 className="text-xl font-bold text-slate-900 mb-5">マッチング一覧</h1>
 
-      {matches.length === 0 ? (
+      {error ? (
+        <div className="flex flex-col items-center justify-center h-96 text-slate-400">
+          <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center text-3xl mb-4">⚠️</div>
+          <p className="font-semibold text-slate-600">{error}</p>
+          <button onClick={fetchMatches} className="mt-3 text-sm text-violet-600 font-semibold hover:underline">再読み込み</button>
+        </div>
+      ) : matches.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-96 text-slate-400">
           <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-3xl mb-4">💬</div>
           <p className="font-semibold text-slate-600">マッチングがありません</p>

@@ -4,6 +4,7 @@ import { io } from 'socket.io-client';
 import { api } from './api';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Demo from './pages/Demo';
 import Swipe from './pages/Swipe';
 import Matches from './pages/Matches';
 import Chat from './pages/Chat';
@@ -115,6 +116,7 @@ export default function App() {
           <Routes>
             <Route path="/login" element={user ? <Navigate to="/swipe" /> : <Login />} />
             <Route path="/register" element={user ? <Navigate to="/swipe" /> : <Register />} />
+            <Route path="/demo" element={user ? <Navigate to="/swipe" /> : <Demo />} />
             <Route path="/swipe" element={<RequireAuth><Swipe /></RequireAuth>} />
             <Route path="/matches" element={<RequireAuth><Matches /></RequireAuth>} />
             <Route path="/matches/:matchId" element={<RequireAuth><Chat /></RequireAuth>} />

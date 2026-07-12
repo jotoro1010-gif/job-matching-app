@@ -12,6 +12,11 @@ function emitNotification(req, userId) {
   if (io && socketId) io.to(socketId).emit('notification', { count });
 }
 
+router.post('/reset', authenticate, (req, res) => {
+  db.swipes.resetByUser(req.userId);
+  res.json({ ok: true });
+});
+
 router.post('/', authenticate, (req, res) => {
   const { targetId, liked, type = 'normal' } = req.body;
 

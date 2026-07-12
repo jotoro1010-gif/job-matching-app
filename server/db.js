@@ -59,6 +59,11 @@ const db = {
       const { password, ...rest } = u;
       return rest;
     },
+    list() {
+      return load().users
+        .map(({ password, ...rest }) => rest)
+        .sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+    },
     update(id, fields) {
       const data = load();
       const user = data.users.find(u => u.id === id);
@@ -109,7 +114,7 @@ const db = {
           return { c, score };
         })
         .sort((a, b) => b.score - a.score)
-        .slice(0, 10)
+        .slice(0, 20)
         .map(({ c }) => ({
           id: c.id, name: c.name, bio: c.bio, skills: c.skills, location: c.location,
           avatar: c.avatar, role: c.role, salary_range: c.salary_range,
@@ -138,6 +143,11 @@ const db = {
     getSuperLikeCount(userId) {
       const today = new Date().toISOString().slice(0, 10);
       return load().swipes.filter(s => s.swiper_id === userId && s.type === 'super' && s.created_at.slice(0, 10) === today).length;
+    },
+    resetByUser(userId) {
+      const data = load();
+      data.swipes = data.swipes.filter(s => s.swiper_id !== userId);
+      save(data);
     },
   },
 

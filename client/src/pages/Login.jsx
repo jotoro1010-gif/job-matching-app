@@ -83,6 +83,9 @@ export default function Login() {
           アカウントをお持ちでない方は{' '}
           <Link to="/register" className="text-violet-600 font-semibold hover:underline">新規登録</Link>
         </p>
+        <p className="text-center mt-2 text-slate-400 text-sm">
+          <Link to="/demo" className="text-violet-500 font-semibold hover:underline">デモ画面はこちら</Link>
+        </p>
       </div>
     </div>
   );
